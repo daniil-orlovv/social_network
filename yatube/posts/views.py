@@ -56,7 +56,7 @@ def post_detail(request, post_id):
     post = get_object_or_404(Post, pk=post_id)
     posts_count = post.author.posts.count()
     comments = Comment.objects.filter(post=post)
-    comment_form = CommentForm
+    comment_form = CommentForm()
     context = {
         'post': post,
         'posts_count': posts_count,
@@ -136,8 +136,12 @@ def profile_follow(request, username):
     user = request.user
     author = get_object_or_404(User, username=username)
 
-    if user != author:
-        Follow.objects.create(user=user, author=author)
+    if not Follow.objects.filter(
+            user=user,
+            author=author
+    ).exists():
+        if user != author:
+            Follow.objects.create(user=user, author=author)
 
     return redirect('posts:profile', username=author)
 

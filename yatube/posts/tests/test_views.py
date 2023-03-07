@@ -199,6 +199,11 @@ class PostPagesTest(TestCase):
         )
         following = Follow.objects.filter(user=self.user,
                                           author=self.other_user.id).exists()
+        response = self.authorized_client.post(
+            reverse('posts:profile_follow', kwargs={'username':
+                                                    self.other_user.username}),
+            follow=True
+        )
         follower_count = Follow.objects.filter(author=self.other_user).count()
         self.assertTrue(following)
         self.assertEqual(follower_count, 1)
@@ -218,6 +223,7 @@ class PostPagesTest(TestCase):
             user=self.user,
             author=self.other_user.id
         ).exists()
+        self.assertTrue(following)
 
     def test_new_post_view_on_follow_page_who_subscribe(self):
         """Проверяем, что новая запись пользователя появляется в ленте тех,
