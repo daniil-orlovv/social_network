@@ -5,7 +5,6 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase, Client
 from django.core.cache import cache
 from django.conf.urls import handler404
-from django.conf.urls import handler403
 
 from posts.models import Post, Group
 
