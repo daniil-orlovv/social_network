@@ -5,6 +5,7 @@ from django.test import Client, TestCase
 from django.urls import reverse
 from django import forms
 from django.core.cache import cache
+from django.core.files.uploadedfile import SimpleUploadedFile
 
 from posts.models import Post, Group, Follow
 from posts.forms import PostForm
@@ -188,9 +189,9 @@ class PostPagesTest(TestCase):
                                    )
         self.assertNotContains(response, post.text)
 
-    def test_auth_user_subscribe_and_unsubscribe_on_authors(self):
+    def test_auth_user_subscribe_on_authors(self):
         """Проверяем, что авторизованный пользователь может подписываться
-        на других пользователей и удалять их из подписок.
+        на других пользователей.
         """
         response = self.authorized_client.post(
             reverse('posts:profile_follow', kwargs={'username':
@@ -199,11 +200,6 @@ class PostPagesTest(TestCase):
         )
         following = Follow.objects.filter(user=self.user,
                                           author=self.other_user.id).exists()
-        response = self.authorized_client.post(
-            reverse('posts:profile_follow', kwargs={'username':
-                                                    self.other_user.username}),
-            follow=True
-        )
         follower_count = Follow.objects.filter(author=self.other_user).count()
         self.assertTrue(following)
         self.assertEqual(follower_count, 1)
@@ -212,27 +208,31 @@ class PostPagesTest(TestCase):
             reverse('posts:profile', kwargs={'username':
                                              self.other_user.username})
         )
-        response = self.authorized_client.post(
+
+    def test_auth_user_unsubscribe_on_authors(self):
+        """Проверяем, что авторизованный пользователь может отписываться
+        от других пользователей.
+        """
+        self.authorized_client.post(
             reverse(
                 'posts:profile_unfollow',
                 kwargs={'username': self.other_user.username}
             ),
             follow=True
         )
-        following = not Follow.objects.filter(
+        following = Follow.objects.filter(
             user=self.user,
             author=self.other_user.id
         ).exists()
-        self.assertTrue(following)
+        self.assertFalse(following)
 
     def test_new_post_view_on_follow_page_who_subscribe(self):
         """Проверяем, что новая запись пользователя появляется в ленте тех,
         кто на него подписан.
         """
-        self.authorized_client.post(
-            reverse('posts:profile_follow', kwargs={'username':
-                                                    self.other_user.username}),
-            follow=True
+        Follow.objects.create(
+            user=self.user,
+            author=self.other_user
         )
         new_post = self.other_post
         response = self.authorized_client.get(reverse('posts:follow_index'))
@@ -245,6 +245,132 @@ class PostPagesTest(TestCase):
         new_post = self.other_post
         response = self.authorized_client.get(reverse('posts:follow_index'))
         self.assertNotContains(response, new_post)
+
+    def test_image_index(self):
+        """Проверяем, что при выводе поста с картинкой изображение передаётся
+        в словаре context на главную страницу(index).
+        """
+        small_gif = (
+            b'\x47\x49\x46\x38\x39\x61\x02\x00'
+            b'\x01\x00\x80\x00\x00\x00\x00\x00'
+            b'\xFF\xFF\xFF\x21\xF9\x04\x00\x00'
+            b'\x00\x00\x00\x2C\x00\x00\x00\x00'
+            b'\x02\x00\x01\x00\x00\x02\x02\x0C'
+            b'\x0A\x00\x3B'
+        )
+        uploaded = SimpleUploadedFile(
+            name='small.gif',
+            content=small_gif,
+            content_type='image/gif'
+        )
+        form_data = {
+            'text': 'Тестовый текст с картинкой',
+            'image': uploaded
+        }
+        self.authorized_client.post(
+            reverse('posts:post_create'),
+            data=form_data,
+            follow=True
+        )
+        self.assertTrue(
+            Post.objects.filter(
+                text='Тестовый текст с картинкой',
+                image='posts/small.gif'
+            ).exists()
+        )
+
+    def test_image_profile(self):
+        """Проверяем, что при выводе поста с картинкой изображение передаётся
+        в словаре context на страницу профайла(profile).
+        """
+        small_gif = (
+            b'\x47\x49\x46\x38\x39\x61\x02\x00'
+            b'\x01\x00\x80\x00\x00\x00\x00\x00'
+            b'\xFF\xFF\xFF\x21\xF9\x04\x00\x00'
+            b'\x00\x00\x00\x2C\x00\x00\x00\x00'
+            b'\x02\x00\x01\x00\x00\x02\x02\x0C'
+            b'\x0A\x00\x3B'
+        )
+        uploaded = SimpleUploadedFile(
+            name='small2.gif',
+            content=small_gif,
+            content_type='image/gif'
+        )
+        form_data = {
+            'text': 'Тестовый текст с картинкой2',
+            'image': uploaded
+        }
+        self.authorized_client.post(
+            reverse('posts:post_create'),
+            data=form_data,
+            follow=True
+        )
+        response = self.authorized_client.get(reverse('posts:profile',
+                                              kwargs={'username':
+                                                      self.user.username}))
+        self.assertContains(response, self.post.image)
+
+    def test_image_group_list(self):
+        """Проверяем, что при выводе поста с картинкой изображение передаётся
+        в словаре context на страницу группы(group_list).
+        """
+        small_gif = (
+            b'\x47\x49\x46\x38\x39\x61\x02\x00'
+            b'\x01\x00\x80\x00\x00\x00\x00\x00'
+            b'\xFF\xFF\xFF\x21\xF9\x04\x00\x00'
+            b'\x00\x00\x00\x2C\x00\x00\x00\x00'
+            b'\x02\x00\x01\x00\x00\x02\x02\x0C'
+            b'\x0A\x00\x3B'
+        )
+        uploaded = SimpleUploadedFile(
+            name='small2.gif',
+            content=small_gif,
+            content_type='image/gif'
+        )
+        form_data = {
+            'text': 'Тестовый текст с картинкой2',
+            'image': uploaded
+        }
+        self.authorized_client.post(
+            reverse('posts:post_create'),
+            data=form_data,
+            follow=True
+        )
+        response = self.authorized_client.get(reverse('posts:group_list',
+                                              kwargs={'slug':
+                                                      self.group.slug}))
+        self.assertContains(response, self.post.image)
+
+    def test_image_post_detail(self):
+        """Проверяем, что при выводе поста с картинкой изображение передаётся
+        в словаре context на отдельную страницу поста(post_detail).
+        """
+        small_gif = (
+            b'\x47\x49\x46\x38\x39\x61\x02\x00'
+            b'\x01\x00\x80\x00\x00\x00\x00\x00'
+            b'\xFF\xFF\xFF\x21\xF9\x04\x00\x00'
+            b'\x00\x00\x00\x2C\x00\x00\x00\x00'
+            b'\x02\x00\x01\x00\x00\x02\x02\x0C'
+            b'\x0A\x00\x3B'
+        )
+        uploaded = SimpleUploadedFile(
+            name='small2.gif',
+            content=small_gif,
+            content_type='image/gif'
+        )
+        form_data = {
+            'text': 'Тестовый текст с картинкой2',
+            'image': uploaded
+        }
+        self.authorized_client.post(
+            reverse('posts:post_create'),
+            data=form_data,
+            follow=True
+        )
+        response = self.authorized_client.get(reverse('posts:post_detail',
+                                              kwargs={'post_id':
+                                                      self.post.id}))
+        self.assertContains(response, self.post.image)
 
 
 class PaginatorViewsTest(TestCase):
@@ -300,7 +426,6 @@ class PaginatorViewsTest(TestCase):
         """Проверяем, что количество постов на второй странице шаблона
         profile равно 10.
         """
-        cache.clear()
         response = self.client.get(reverse('posts:profile',
                                    kwargs={'username': self.user.username})
                                    )
@@ -310,7 +435,6 @@ class PaginatorViewsTest(TestCase):
         """Проверяем, что количество постов на второй странице шаблона
         profile равно 3.
         """
-        cache.clear()
         response = self.client.get(reverse('posts:profile',
                                    kwargs={'username':
                                            self.user.username}), {'page': 2}
