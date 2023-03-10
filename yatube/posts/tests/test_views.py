@@ -10,7 +10,7 @@ from django import forms
 from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
 
-from posts.models import Post, Group, Follow
+from posts.models import Post, Group, Follow, Comment
 from posts.forms import PostForm
 
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
@@ -36,11 +36,20 @@ class PostPagesTest(TestCase):
             author=cls.user,
             group=cls.group
         )
+        Follow.objects.create(
+            user=cls.user,
+            author=cls.other_user
+        )
         cls.other_post = Post.objects.create(
             text='Другой текст',
             pub_date=datetime(2023, 2, 24, 15, 30, 0),
             author=cls.other_user,
             group=cls.other_group
+        )
+        cls.comment = Comment.objects.create(
+            post=cls.post,
+            author=cls.other_user,
+            text='Тестовый комментарий'
         )
 
     @classmethod
@@ -226,6 +235,13 @@ class PostPagesTest(TestCase):
         """
         self.authorized_client.post(
             reverse(
+                'posts:profile_follow',
+                kwargs={'username': self.other_user.username}
+            ),
+            follow=True
+        )
+        self.authorized_client.post(
+            reverse(
                 'posts:profile_unfollow',
                 kwargs={'username': self.other_user.username}
             ),
@@ -241,10 +257,8 @@ class PostPagesTest(TestCase):
         """Проверяем, что новая запись пользователя появляется в ленте тех,
         кто на него подписан.
         """
-        Follow.objects.create(
-            user=self.user,
-            author=self.other_user
-        )
+        #Follow.objects.create(user=self.user, author=self.other_user)
+        #self.following
         new_post = self.other_post
         response = self.authorized_client.get(reverse('posts:follow_index'))
         self.assertContains(response, new_post)
@@ -379,6 +393,15 @@ class PostPagesTest(TestCase):
                                               kwargs={'post_id':
                                                       self.post.id}))
         self.assertContains(response, self.post.image)
+
+    def test_comment_on_page_post_detail_after_post(self):
+        """Проверяем, что после успешной отправки комментарий появляется
+        на странице поста.
+        """
+        self.comment
+        response = self.authorized_client.get(
+            reverse('posts:post_detail', kwargs={'post_id': self.post.id}))
+        self.assertContains(response, 'Тестовый комментарий')
 
 
 class PaginatorViewsTest(TestCase):

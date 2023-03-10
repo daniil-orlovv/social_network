@@ -28,11 +28,6 @@ class PostCreateFormTests(TestCase):
             pub_date=datetime(2023, 2, 24, 14, 30, 0),
             author=cls.user
         )
-        cls.comment = Comment.objects.create(
-            post=cls.post,
-            author=cls.user,
-            text='Тестовый коммент'
-        )
 
     @classmethod
     def tearDownClass(cls):
@@ -125,8 +120,11 @@ class PostCreateFormTests(TestCase):
         """Проверяем, что комментировать посты может только авторизованный
         пользователь.
         """
+        self.authorized_client.post(reverse(
+            'posts:add_comment', kwargs={'post_id': self.post.id}
+        ), data={'text': 'Тестовый комментарий'})
         comment = Comment.objects.filter(
-            text='Тестовый коммент'
+            text='Тестовый комментарий'
         )
         self.assertTrue(comment.exists())
 
@@ -141,15 +139,3 @@ class PostCreateFormTests(TestCase):
             text='Тестовый коммент от неавторизованного'
         )
         self.assertFalse(comment.exists())
-
-    def test_comment_on_page_post_detail_after_post(self):
-        """Проверяем, что после успешной отправки комментарий появляется
-        на странице поста.
-        """
-        form_data = {'text': 'Тестовый комментарий'}
-        response = self.authorized_client.post(
-            reverse('posts:add_comment', kwargs={'post_id': self.post.id}),
-            data=form_data,
-            follow=True
-        )
-        self.assertContains(response, 'Тестовый комментарий')
