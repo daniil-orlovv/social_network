@@ -1,8 +1,11 @@
 from datetime import datetime
+import tempfile
+import shutil
 
 from django.contrib.auth import get_user_model
-from django.test import Client, TestCase
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
+from django.conf import settings
 from django import forms
 from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -10,9 +13,12 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from posts.models import Post, Group, Follow
 from posts.forms import PostForm
 
+TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
+
 User = get_user_model()
 
 
+@override_settings(MEDIA_ROOT=TEMP_MEDIA_ROOT)
 class PostPagesTest(TestCase):
     @classmethod
     def setUpClass(cls):
@@ -36,6 +42,11 @@ class PostPagesTest(TestCase):
             author=cls.other_user,
             group=cls.other_group
         )
+
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        shutil.rmtree(TEMP_MEDIA_ROOT, ignore_errors=True)
 
     def setUp(self):
         cache.clear()
@@ -272,12 +283,9 @@ class PostPagesTest(TestCase):
             data=form_data,
             follow=True
         )
-        self.assertTrue(
-            Post.objects.filter(
-                text='Тестовый текст с картинкой',
-                image='posts/small.gif'
-            ).exists()
-        )
+        post = Post.objects.latest('id')
+        self.assertEqual(post.text, form_data['text'])
+        self.assertEqual(post.image, f'posts/{uploaded}')
 
     def test_image_profile(self):
         """Проверяем, что при выводе поста с картинкой изображение передаётся
@@ -404,7 +412,7 @@ class PaginatorViewsTest(TestCase):
         self.assertEqual(len(response.context['page_obj']), 3)
 
     def test_first_page_contains_ten_records_for_group_list(self):
-        """Проверяем, что количество постов на второй странице шаблона
+        """Проверяем, что количество постов на первой странице шаблона
         group_list равно 10.
         """
         response = self.client.get(reverse('posts:group_list',
@@ -423,7 +431,7 @@ class PaginatorViewsTest(TestCase):
         self.assertEqual(len(response.context['page_obj']), 3)
 
     def test_first_page_contains_ten_records_for_profile(self):
-        """Проверяем, что количество постов на второй странице шаблона
+        """Проверяем, что количество постов на первой странице шаблона
         profile равно 10.
         """
         response = self.client.get(reverse('posts:profile',
