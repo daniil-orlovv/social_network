@@ -4,6 +4,7 @@ from datetime import datetime
 from django.contrib.auth import get_user_model
 from django.test import TestCase, Client
 from django.core.cache import cache
+from django.conf.urls import handler404
 
 from posts.models import Post, Group
 
@@ -110,3 +111,8 @@ class PostURLTests(TestCase):
         self.assertRedirects(response,
                              f'/posts/{self.post.id}/'
                              )
+
+    def test_custom_page_404(self):
+        """"Проверяем, что страница 404 отдает кастомный шаблон."""
+        response = self.guest_client.get(handler404)
+        self.assertTemplateUsed(response, 'core/404.html')

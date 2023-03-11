@@ -34,28 +34,10 @@ def profile(request, username):
     template = 'posts/profile.html'
     page_obj = paginate(request, posts)
     posts_count = posts.count()
-    # Этот вариант рабочий
     is_auth = request.user.is_authenticated
-    following = False
-    if is_auth:
-        following = Follow.objects.filter(
-            user=request.user, author=author
-        ).exists()
-
-    # Этот тоже, но тут большое условие:
-    # user_auth = request.user.is_authenticated
-    # if user_auth and Follow.objects.filter(user=request.user,
-    #                                        author=author).exists():
-    #     following = True
-    # else:
-    #     following = False
-
-    # Этот пока не получилось реализовать - выдает ошибку и ломает переход на
-    # страницу profile для гостя
-    # is_auth = request.user.is_authenticated
-    # is_exist = Follow.objects.filter(
-    #          user=request.user, author=author).exists()
-    # following = is_auth and is_exist
+    is_exist = Follow.objects.filter(user=request.user.id,
+                                     author=author).exists()
+    following = is_auth and is_exist
 
     context = {
         'page_obj': page_obj,
@@ -132,11 +114,7 @@ def add_comment(request, post_id):
 
 @login_required
 def follow_index(request):
-    user = request.user
-    following = Follow.objects.filter(user=user)
-    posts = Post.objects.filter(
-        author__in=following.values_list('author__id', flat=True)
-    ).order_by('-pub_date')
+    posts = Post.objects.filter(author__following__user=request.user)
     page_obj = paginate(request, posts)
     context = {
         'page_obj': page_obj,
@@ -161,6 +139,6 @@ def profile_follow(request, username):
 def profile_unfollow(request, username):
     author = get_object_or_404(User, username=username)
     follow = Follow.objects.filter(user=request.user, author=author)
-    if follow:
+    if follow.exists():
         follow.delete()
     return redirect('posts:profile', username=username)

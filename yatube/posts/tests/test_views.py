@@ -36,10 +36,6 @@ class PostPagesTest(TestCase):
             author=cls.user,
             group=cls.group
         )
-        Follow.objects.create(
-            user=cls.user,
-            author=cls.other_user
-        )
         cls.other_post = Post.objects.create(
             text='Другой текст',
             pub_date=datetime(2023, 2, 24, 15, 30, 0),
@@ -51,6 +47,28 @@ class PostPagesTest(TestCase):
             author=cls.other_user,
             text='Тестовый комментарий'
         )
+        cls.small_gif = (
+            b'\x47\x49\x46\x38\x39\x61\x02\x00'
+            b'\x01\x00\x80\x00\x00\x00\x00\x00'
+            b'\xFF\xFF\xFF\x21\xF9\x04\x00\x00'
+            b'\x00\x00\x00\x2C\x00\x00\x00\x00'
+            b'\x02\x00\x01\x00\x00\x02\x02\x0C'
+            b'\x0A\x00\x3B'
+        )
+        cls.uploaded = SimpleUploadedFile(
+            name='small2.gif',
+            content=cls.small_gif,
+            content_type='image/gif'
+        )
+        cls.form_data = {
+            'text': 'Тестовый текст с картинкой2',
+            'image': cls.uploaded
+        }
+        cls.image_post = Post.objects.create(
+            text=cls.form_data['text'],
+            author=cls.user,
+            image=cls.form_data['image']
+        )
 
     @classmethod
     def tearDownClass(cls):
@@ -61,6 +79,9 @@ class PostPagesTest(TestCase):
         cache.clear()
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
+        self.reader_user = Client()
+        self.reader_user.force_login(self.other_user)
+        Follow.objects.get_or_create(user=self.user, author=self.other_user)
 
     def test_pages_uses_correct_template(self):
         """URL-адрес использует соответствующий шаблон."""
@@ -122,7 +143,6 @@ class PostPagesTest(TestCase):
         response = self.authorized_client.get(reverse('posts:post_edit',
                                               kwargs={'post_id': self.post.id})
                                               )
-        form = PostForm()
         form_fields = {
             'text': forms.fields.CharField,
             'group': forms.fields.ChoiceField
@@ -136,7 +156,7 @@ class PostPagesTest(TestCase):
         self.assertTrue('is_edit' in context)
         self.assertEqual(context['is_edit'], True)
         self.assertIsInstance(context['is_edit'], bool)
-        self.assertIsInstance(form, PostForm)
+        self.assertIsInstance((context.get('form')), PostForm)
 
     def test_post_create_page_show_correct_context(self):
         """Шаблон post_create сформирован с правильным контекстом."""
@@ -257,8 +277,6 @@ class PostPagesTest(TestCase):
         """Проверяем, что новая запись пользователя появляется в ленте тех,
         кто на него подписан.
         """
-        #Follow.objects.create(user=self.user, author=self.other_user)
-        #self.following
         new_post = self.other_post
         response = self.authorized_client.get(reverse('posts:follow_index'))
         self.assertContains(response, new_post)
@@ -268,7 +286,7 @@ class PostPagesTest(TestCase):
         кто на него не подписан.
         """
         new_post = self.other_post
-        response = self.authorized_client.get(reverse('posts:follow_index'))
+        response = self.reader_user.get(reverse('posts:follow_index'))
         self.assertNotContains(response, new_post)
 
     def test_image_index(self):
@@ -305,28 +323,7 @@ class PostPagesTest(TestCase):
         """Проверяем, что при выводе поста с картинкой изображение передаётся
         в словаре context на страницу профайла(profile).
         """
-        small_gif = (
-            b'\x47\x49\x46\x38\x39\x61\x02\x00'
-            b'\x01\x00\x80\x00\x00\x00\x00\x00'
-            b'\xFF\xFF\xFF\x21\xF9\x04\x00\x00'
-            b'\x00\x00\x00\x2C\x00\x00\x00\x00'
-            b'\x02\x00\x01\x00\x00\x02\x02\x0C'
-            b'\x0A\x00\x3B'
-        )
-        uploaded = SimpleUploadedFile(
-            name='small2.gif',
-            content=small_gif,
-            content_type='image/gif'
-        )
-        form_data = {
-            'text': 'Тестовый текст с картинкой2',
-            'image': uploaded
-        }
-        self.authorized_client.post(
-            reverse('posts:post_create'),
-            data=form_data,
-            follow=True
-        )
+        self.image_post
         response = self.authorized_client.get(reverse('posts:profile',
                                               kwargs={'username':
                                                       self.user.username}))
@@ -336,28 +333,7 @@ class PostPagesTest(TestCase):
         """Проверяем, что при выводе поста с картинкой изображение передаётся
         в словаре context на страницу группы(group_list).
         """
-        small_gif = (
-            b'\x47\x49\x46\x38\x39\x61\x02\x00'
-            b'\x01\x00\x80\x00\x00\x00\x00\x00'
-            b'\xFF\xFF\xFF\x21\xF9\x04\x00\x00'
-            b'\x00\x00\x00\x2C\x00\x00\x00\x00'
-            b'\x02\x00\x01\x00\x00\x02\x02\x0C'
-            b'\x0A\x00\x3B'
-        )
-        uploaded = SimpleUploadedFile(
-            name='small2.gif',
-            content=small_gif,
-            content_type='image/gif'
-        )
-        form_data = {
-            'text': 'Тестовый текст с картинкой2',
-            'image': uploaded
-        }
-        self.authorized_client.post(
-            reverse('posts:post_create'),
-            data=form_data,
-            follow=True
-        )
+        self.image_post
         response = self.authorized_client.get(reverse('posts:group_list',
                                               kwargs={'slug':
                                                       self.group.slug}))
@@ -367,28 +343,7 @@ class PostPagesTest(TestCase):
         """Проверяем, что при выводе поста с картинкой изображение передаётся
         в словаре context на отдельную страницу поста(post_detail).
         """
-        small_gif = (
-            b'\x47\x49\x46\x38\x39\x61\x02\x00'
-            b'\x01\x00\x80\x00\x00\x00\x00\x00'
-            b'\xFF\xFF\xFF\x21\xF9\x04\x00\x00'
-            b'\x00\x00\x00\x2C\x00\x00\x00\x00'
-            b'\x02\x00\x01\x00\x00\x02\x02\x0C'
-            b'\x0A\x00\x3B'
-        )
-        uploaded = SimpleUploadedFile(
-            name='small2.gif',
-            content=small_gif,
-            content_type='image/gif'
-        )
-        form_data = {
-            'text': 'Тестовый текст с картинкой2',
-            'image': uploaded
-        }
-        self.authorized_client.post(
-            reverse('posts:post_create'),
-            data=form_data,
-            follow=True
-        )
+        self.image_post
         response = self.authorized_client.get(reverse('posts:post_detail',
                                               kwargs={'post_id':
                                                       self.post.id}))

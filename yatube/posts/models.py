@@ -67,4 +67,7 @@ class Follow(models.Model):
                                related_name='following')
 
     class Meta:
-        unique_together = ('user', 'author')
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'author'],
+                                    name='unique_article')
+        ]
