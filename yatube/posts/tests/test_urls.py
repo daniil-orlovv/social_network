@@ -1,8 +1,11 @@
 from http import HTTPStatus
 from datetime import datetime
+import shutil
+import tempfile
 
 from django.contrib.auth import get_user_model
-from django.test import TestCase, Client
+from django.test import TestCase, Client, override_settings
+from django.conf import settings
 from django.core.cache import cache
 from django.conf.urls import handler404
 
@@ -10,7 +13,10 @@ from posts.models import Post, Group
 
 User = get_user_model()
 
+TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 
+
+@override_settings(MEDIA_ROOT=TEMP_MEDIA_ROOT)
 class PostURLTests(TestCase):
     @classmethod
     def setUpClass(cls):
@@ -24,6 +30,11 @@ class PostURLTests(TestCase):
             pub_date=datetime(2023, 2, 24, 14, 30, 0),
             author=cls.user
         )
+
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        shutil.rmtree(TEMP_MEDIA_ROOT, ignore_errors=True)
 
     def setUp(self):
         self.guest_client = Client()

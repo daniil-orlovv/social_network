@@ -7,10 +7,8 @@ SECRET_KEY = 'ovg_1ouv*yc254x&+^aa)&f7vz#xzf2kd$k!&a#0k!_-6+xv5x'
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    'localhost',
-    '127.0.0.1',
-    '[::1]',
-    'testserver',
+    'www.daniilorlovv.pythonanywhere.com',
+    'daniilorlovv.pythonanywhere.com',
 ]
 
 
@@ -26,6 +24,7 @@ INSTALLED_APPS = [
     'core.apps.CoreConfig',
     'about.apps.AboutConfig',
     'sorl.thumbnail',
+    'debug_toolbar',
 ]
 
 MIDDLEWARE = [
@@ -36,6 +35,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
 
 ROOT_URLCONF = 'yatube.urls'
@@ -120,3 +120,7 @@ CACHES = {
 CSRF_FAILURE_VIEW = 'core.views.csrf_failure'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+
+INTERNAL_IPS = [
+    '127.0.0.1',
+]
