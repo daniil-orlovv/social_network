@@ -293,28 +293,8 @@ class PostPagesTest(TestCase):
         """Проверяем, что при выводе поста с картинкой изображение передаётся
         в словаре context на главную страницу(index).
         """
-        small_gif = (
-            b'\x47\x49\x46\x38\x39\x61\x02\x00'
-            b'\x01\x00\x80\x00\x00\x00\x00\x00'
-            b'\xFF\xFF\xFF\x21\xF9\x04\x00\x00'
-            b'\x00\x00\x00\x2C\x00\x00\x00\x00'
-            b'\x02\x00\x01\x00\x00\x02\x02\x0C'
-            b'\x0A\x00\x3B'
-        )
-        uploaded = SimpleUploadedFile(
-            name='small.gif',
-            content=small_gif,
-            content_type='image/gif'
-        )
-        form_data = {
-            'text': 'Тестовый текст с картинкой',
-            'image': uploaded
-        }
-        self.authorized_client.post(
-            reverse('posts:post_create'),
-            data=form_data,
-            follow=True
-        )
+        form_data = self.form_data
+        uploaded = self.uploaded
         post = Post.objects.latest('id')
         self.assertEqual(post.text, form_data['text'])
         self.assertEqual(post.image, f'posts/{uploaded}')
@@ -323,7 +303,6 @@ class PostPagesTest(TestCase):
         """Проверяем, что при выводе поста с картинкой изображение передаётся
         в словаре context на страницу профайла(profile).
         """
-        self.image_post
         response = self.authorized_client.get(reverse('posts:profile',
                                               kwargs={'username':
                                                       self.user.username}))
@@ -333,7 +312,6 @@ class PostPagesTest(TestCase):
         """Проверяем, что при выводе поста с картинкой изображение передаётся
         в словаре context на страницу группы(group_list).
         """
-        self.image_post
         response = self.authorized_client.get(reverse('posts:group_list',
                                               kwargs={'slug':
                                                       self.group.slug}))
@@ -343,7 +321,6 @@ class PostPagesTest(TestCase):
         """Проверяем, что при выводе поста с картинкой изображение передаётся
         в словаре context на отдельную страницу поста(post_detail).
         """
-        self.image_post
         response = self.authorized_client.get(reverse('posts:post_detail',
                                               kwargs={'post_id':
                                                       self.post.id}))

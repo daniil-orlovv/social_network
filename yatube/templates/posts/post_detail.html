@@ -49,9 +49,16 @@
             </p>
             <a href="{% url 'posts:post_edit' post.pk %}">
               {% if post.author == user %}
-              <button type="submit" class="btn btn-primary">
-                редактировать запись
-              </button>
+                <button type="submit" class="btn btn-primary">
+                  редактировать запись
+                </button>
+              {% endif %}
+            </a>
+            <a href="#">
+              {% if post.author == user %}
+                <button type="submit" class="btn btn-primary">
+                  удалить запись
+                </button>
               {% endif %}
             </a>
             {% include 'posts/includes/comments.html' %}
