@@ -11,6 +11,7 @@
     <meta name="msapplication-TileColor" content="#000">
     <meta name="theme-color" content="#ffffff">
     <link rel="stylesheet" href={% static 'css/bootstrap.min.css' %}>
+    <link rel="stylesheet" href={% static 'css/custom-css.css' %}>
     <title>
       {% block title %}
       {% endblock %}
@@ -19,7 +20,7 @@
   <body>
     {% include 'includes/header.html' %}
     <main>
-      <div class="container py-5">
+      <div class="container py-5 mt-5 shadow p-3 mb-5 rounded">
         {% block content %}
           Контент не подвезли :(
         {% endblock %}

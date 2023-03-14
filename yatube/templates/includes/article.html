@@ -1,18 +1,18 @@
   <article>
     <ul>
-      <li>
+      <li class="text-shadow">
         Автор:{% if show_link %} <a href="{% url 'posts:profile' post.author.username %}">
           {% endif %}
           {{ post.author.get_full_name }}</a>
       </li>
-      <li>
+      <li class="text-shadow">
         Дата публикации: {{ post.pub_date|date:"d E Y" }}
       </li>
     </ul>
-    <p>
+    <p class="text-shadow">
       {{ post.text }}
     </p>
-    <a href="{% url 'posts:post_detail' post.pk %}">
+    <a class="text-shadow" href="{% url 'posts:post_detail' post.pk %}">
       подробная информация
     </a>
   </article>

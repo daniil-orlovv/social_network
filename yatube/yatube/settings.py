@@ -7,8 +7,10 @@ SECRET_KEY = 'ovg_1ouv*yc254x&+^aa)&f7vz#xzf2kd$k!&a#0k!_-6+xv5x'
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    'www.daniilorlovv.pythonanywhere.com',
-    'daniilorlovv.pythonanywhere.com',
+    'localhost',
+    '127.0.0.1',
+    '[::1]',
+    'testserver',
 ]
 
 

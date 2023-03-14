@@ -9,31 +9,31 @@
         <div class="row">
           <aside class="col-12 col-md-3">
             <ul class="list-group list-group-flush">
-              <li class="list-group-item">
+              <li class="list-group-item text-shadow">
                 Дата публикации: {{ post.pub_date|date:"d E Y" }}
               </li>
               {% if post.group %}
-              <li class="list-group-item">
+              <li class="list-group-item text-shadow">
                 Группа: {{ post.group.title }}
                 <br>
                 {% if post.group %}
-                <a href="{% url 'posts:group_list' post.group.slug %}">
+                <a class="text-shadow" href="{% url 'posts:group_list' post.group.slug %}">
                   все записи группы
                 </a>
                 {% endif %}
               {% endif %}
               </li>
-              <li class="list-group-item">
+              <li class="list-group-item text-shadow">
                 Автор:
                   <a href="{% url 'posts:profile' post.author.username %}">
                   {{ post.author.get_full_name }}
                   </a>
                   {{ user.username }}
               </li>
-              <li class="list-group-item d-flex justify-content-between align-items-center">
+              <li class="list-group-item d-flex justify-content-between align-items-center text-shadow">
                 Всего постов автора:  <span >{{ posts_count }}</span>
               </li>
-              <li class="list-group-item">
+              <li class="list-group-item text-shadow">
                 <a href="{% url "posts:profile" post.author %}">
                   все посты пользователя
                 </a>
@@ -41,10 +41,10 @@
             </ul>
           </aside>
           <article class="col-12 col-md-9">
-            {% thumbnail post.image "960x339" crop="center" upscale=True as im %}
-              <img class="card-img my-2" src="{{ im.url }}">
+            {% thumbnail post.image "960x339" crop="smart" upscale=False as im %}
+              <img class="card-img my-2 shadow" src="{{ im.url }}">
             {% endthumbnail %}
-            <p>
+            <p class="text-shadow">
             {{ post.text }}
             </p>
             <a href="{% url 'posts:post_edit' post.pk %}">
@@ -56,7 +56,7 @@
             </a>
             <a href="#">
               {% if post.author == user %}
-                <button type="submit" class="btn btn-primary">
+                <button type="submit" class="btn btn-danger">
                   удалить запись
                 </button>
               {% endif %}
