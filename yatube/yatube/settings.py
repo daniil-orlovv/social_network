@@ -7,10 +7,8 @@ SECRET_KEY = 'ovg_1ouv*yc254x&+^aa)&f7vz#xzf2kd$k!&a#0k!_-6+xv5x'
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    'localhost',
-    '127.0.0.1',
-    '[::1]',
-    'testserver',
+    'www.daniilorlovv.pythonanywhere.com',
+    'daniilorlovv.pythonanywhere.com',
 ]
 
 
@@ -100,6 +98,7 @@ USE_TZ = True
 
 
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static'),)
 
