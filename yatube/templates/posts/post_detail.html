@@ -7,7 +7,7 @@
 
     {% block content %}
         <div class="row">
-          <aside class="col-12 col-md-3">
+          <aside class="col-12 col-md-3 border rounded shadow-sm">
             <ul class="list-group list-group-flush">
               <li class="list-group-item text-shadow">
                 Дата публикации: {{ post.pub_date|date:"d E Y" }}
@@ -41,8 +41,8 @@
             </ul>
           </aside>
           <article class="col-12 col-md-9">
-            {% thumbnail post.image "1080x1080" crop="center" upscale=True as im %}
-              <img class="card-img my-2 shadow" src="{{ im.url }}">
+            {% thumbnail post.image "1400x800" crop="center" upscale=True as im %}
+              <img class="card-img my-2 rounded shadow-sm" src="{{ im.url }}">
             {% endthumbnail %}
             <p class="text-shadow">
             {{ post.text }}
