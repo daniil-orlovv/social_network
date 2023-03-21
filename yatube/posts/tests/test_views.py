@@ -330,7 +330,6 @@ class PostPagesTest(TestCase):
         """Проверяем, что после успешной отправки комментарий появляется
         на странице поста.
         """
-        self.comment
         response = self.authorized_client.get(
             reverse('posts:post_detail', kwargs={'post_id': self.post.id}))
         self.assertContains(response, 'Тестовый комментарий')
