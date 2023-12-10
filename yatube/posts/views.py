@@ -7,6 +7,9 @@ from .helpers import paginate
 
 
 def index(request):
+    """
+    Функция для отображения главной страницы index.
+    """
     posts = Post.objects.all()
     page_obj = paginate(request, posts)
     context = {
@@ -17,6 +20,9 @@ def index(request):
 
 
 def group_list(request, slug):
+    """
+    Функция для отображения для вывода списка всех групп.
+    """
     template = 'posts/group_list.html'
     group = get_object_or_404(Group, slug=slug)
     posts = group.posts.all()
@@ -29,6 +35,9 @@ def group_list(request, slug):
 
 
 def profile(request, username):
+    """
+    Функция для отображения профиля пользователя.
+    """
     author = get_object_or_404(User, username=username)
     posts = author.posts.all()
     template = 'posts/profile.html'
@@ -50,6 +59,9 @@ def profile(request, username):
 
 
 def post_detail(request, post_id):
+    """
+    Функция для отображения страницы поста.
+    """
     post = get_object_or_404(Post, pk=post_id)
     posts_count = post.author.posts.count()
     comments = post.comments.all()
@@ -65,6 +77,9 @@ def post_detail(request, post_id):
 
 @login_required
 def post_create(request):
+    """
+    Функция для создания поста.
+    """
     form = PostForm(request.POST or None,
                     files=request.FILES or None,
                     )
@@ -78,6 +93,9 @@ def post_create(request):
 
 @login_required
 def post_edit(request, post_id):
+    """
+    Функция для редактирования поста.
+    """
     post = get_object_or_404(Post, id=post_id)
 
     if request.user != post.author:
@@ -102,6 +120,9 @@ def post_edit(request, post_id):
 
 @login_required
 def add_comment(request, post_id):
+    """
+    Функция для добавления комментария.
+    """
     post = get_object_or_404(Post, id=post_id)
     form = CommentForm(request.POST or None)
     if form.is_valid():
@@ -114,6 +135,9 @@ def add_comment(request, post_id):
 
 @login_required
 def follow_index(request):
+    """
+    Функция для отображения всех подписок пользователя.
+    """
     posts = Post.objects.filter(author__following__user=request.user)
     page_obj = paginate(request, posts)
     context = {
@@ -125,6 +149,9 @@ def follow_index(request):
 
 @login_required
 def profile_follow(request, username):
+    """
+    Функция для подпики на автора.
+    """
     user = request.user
     author = get_object_or_404(User, username=username)
     if user != author:
@@ -137,6 +164,9 @@ def profile_follow(request, username):
 
 @login_required
 def profile_unfollow(request, username):
+    """
+    Функция для того, чтобы отписаться от автора.
+    """
     author = get_object_or_404(User, username=username)
     follow = Follow.objects.filter(user=request.user, author=author)
     if follow.exists():
