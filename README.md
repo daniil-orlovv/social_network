@@ -14,7 +14,7 @@
 Закрепление следующих знаний и навыков: `Django`, `HTML`, `CSS`, `Bootstrap`, `Django ORM`, `Unittest`, `pytest-django`, `Базы данных`
 
 ## Технологии
-`Python`, `Django`, `Django ORM`, `Html`, `Bootstrap`, `Sqlite3`, `Unittest`, `JWT` + `Djoser`
+`Python`, `Django`, `Django ORM`, `Html`, `Bootstrap`, `Sqlite3`, `Unittest`, `JWT` + `Djoser`, `Unittest`
 
 
 
